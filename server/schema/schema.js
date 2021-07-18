@@ -1,10 +1,10 @@
 const graphql = require("graphql")
 const _ = require("lodash")
-const {GraphQLObjectType, GraphQLString,GraphQLSchema, GraphQLID, GraphQLInt} = graphql;
+const {GraphQLObjectType, GraphQLString,GraphQLSchema, GraphQLID, GraphQLInt, GraphQLList} = graphql;
 
 //dummy data
 var books =[
-{name: "hi" , genre: "comedy" , id: "1"}
+{name: "hi" , genre: "comedy" , id: "1", authorId : "1"}
 ]
 var authors = [
     {name : "me" , age: 90 ,id : "1"}
@@ -16,7 +16,13 @@ const BookType = new GraphQLObjectType({
     fields: () => ({
         id : {type : GraphQLID},
         name: { type: GraphQLString},
-        genre : {type : GraphQLString}
+        genre : {type : GraphQLString},
+        author : {
+            type : AuthorType,
+            resolve(parent, args){
+                return _.find(authors , {id : parent.authorId})
+            }
+        }
     })
 })
 
@@ -25,7 +31,13 @@ const AuthorType = new GraphQLObjectType({
     fields: () => ({
         id : {type : GraphQLID},
         name: { type: GraphQLString},
-        age : {type : GraphQLInt}
+        age : {type : GraphQLInt},
+        books:{
+          type : new GraphQLList(BookType),
+          resolve(parent, args){
+              return _.filter(books,{authorId : parent.id})
+          }
+        }
     })
 })
 
@@ -50,6 +62,19 @@ const RootQuery = new GraphQLObjectType({
                 return _.find(authors,{id : args.id})
             }
         },
+        books : {
+            type: new GraphQLList(BookType),
+            resolve(parent, args){
+                return books
+            }
+        },
+        authors : {
+            type: new GraphQLList(AuthorType),
+            resolve(parent, args){
+                return authors
+            }
+        },
+
 
     }
 })
